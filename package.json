@@ -1,0 +1,20 @@
+{
+  "name": "portfolio-fullstack",
+  "version": "1.0.0",
+  "description": "Chala Birmechu's Full-Stack Portfolio Website",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd my_port && npm run dev",
+    "install-all": "npm install && cd server && npm install && cd ../my_port && npm install",
+    "build": "cd my_port && npm run build",
+    "start": "cd server && npm start"
+  },
+  "keywords": ["portfolio", "react", "nodejs", "express", "mongodb"],
+  "author": "Chala Birmechu",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
+
