@@ -33,7 +33,8 @@ const Contact = () => {
     
     try {
       // Send email via backend API
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/contact`, formData);
+      const API_BASE = import.meta.env.VITE_API_URL;
+      const response = await axios.post(`${API_BASE}/api/contact`, formData);
       if (response.data.success) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
