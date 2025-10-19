@@ -30,15 +30,10 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    
     try {
-      // Use backend URL from .env
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/contact`,
-        formData,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-
+      // Send email via backend API
+      const response = await axios.post('/api/contact', formData);
       if (response.data.success) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
@@ -55,15 +50,27 @@ const Contact = () => {
   };
 
   const contactInfo = [
-    { icon: FaMapMarkerAlt, title: 'Location', details: ['Addis Ababa, Ethiopia'] },
-    { icon: FaPhone, title: 'Phone', details: ['+251915950217', '+251941274261'] },
-    { icon: FaEnvelope, title: 'Email', details: ['chalabirmechu@gmail.com'] }
+    {
+      icon: FaMapMarkerAlt,
+      title: 'Location',
+      details: ['Addis Ababa, Ethiopia']
+    },
+    {
+      icon: FaPhone,
+      title: 'Phone',
+      details: ['+251915950217', '+251941274261']
+    },
+    {
+      icon: FaEnvelope,
+      title: 'Email',
+      details: ['chalabirmechu@gmail.com']
+    }
   ];
 
   return (
     <section id="contact" className="contact section">
       <div className="container">
-        <motion.h2
+        <motion.h2 
           className="section-title"
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -73,7 +80,7 @@ const Contact = () => {
         </motion.h2>
 
         <div ref={ref} className="contact-content">
-          <motion.div
+          <motion.div 
             className="contact-info"
             initial={{ opacity: 0, x: -50 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
@@ -100,7 +107,7 @@ const Contact = () => {
             })}
           </motion.div>
 
-          <motion.form
+          <motion.form 
             className="contact-form"
             onSubmit={handleSubmit}
             initial={{ opacity: 0, x: 50 }}
@@ -146,8 +153,8 @@ const Contact = () => {
               <label htmlFor="message">Your Message</label>
             </div>
 
-            <motion.button
-              type="submit"
+            <motion.button 
+              type="submit" 
               className="btn-primary"
               disabled={isSubmitting}
               whileHover={{ scale: 1.05 }}
@@ -158,15 +165,13 @@ const Contact = () => {
             </motion.button>
 
             {submitStatus && (
-              <motion.div
+              <motion.div 
                 className={`submit-status ${submitStatus}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                {submitStatus === 'success'
-                  ? 'Message sent successfully!'
-                  : 'Failed to send message. Please try again.'}
+                {submitStatus === 'success' ? 'Message sent successfully!' : 'Failed to send message. Please try again.'}
               </motion.div>
             )}
           </motion.form>
