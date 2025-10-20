@@ -5,51 +5,52 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--background-color) url('/images/cala.jpg') center center/cover no-repeat;
+  background: var(--background-color);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  overflow: hidden;
-}
-
-/* Optional dark overlay for readability */
-.loading::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  z-index: -1;
 }
 
 .loading-content {
   text-align: center;
-  color: white;
-  position: relative;
-  z-index: 1;
 }
 
-/* Animated Photo (optional) */
-.loading-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 1.5rem;
-  border: 3px solid var(--primary-color);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
-}
-
+/* 🔹 Spinner wrapper (only border rotates) */
 .spinner {
-  width: 60px;
-  height: 60px;
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 🔹 Rotating border ring */
+.spinner-border {
+  position: absolute;
+  width: 100%;
+  height: 100%;
   border: 4px solid var(--border-color);
   border-top-color: var(--primary-color);
   border-radius: 50%;
-  margin: 0 auto 2rem;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  z-index: 0;
 }
 
+/* 🔹 Static image inside */
+.spinner img {
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* Text styling */
 .loading-text {
   font-size: 2rem;
   font-weight: 700;
@@ -66,14 +67,8 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .spinner {
-    width: 50px;
-    height: 50px;
-    border-width: 3px;
-  }
-
-  .loading-photo {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
   }
 
   .loading-text {
@@ -87,14 +82,8 @@
 
 @media (max-width: 480px) {
   .spinner {
-    width: 40px;
-    height: 40px;
-    border-width: 2px;
-  }
-
-  .loading-photo {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
   }
 
   .loading-text {
