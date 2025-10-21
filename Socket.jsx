@@ -1,51 +1,30 @@
-// ...existing code...
-import { useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-let socketInstance = null;
+// Create a single shared socket instance
+const socket = io("https://server-b6w3.onrender.com", {
+  withCredentials: true,
+  transports: ["websocket"], // Use WebSocket for better performance
+  autoConnect: false, // Prevent automatic connection unless you explicitly call connect()
+});
 
-export function initSocket(token) {
-  if (socketInstance) return socketInstance;
-  socketInstance = io(SOCKET_URL, {
-    transports: ['websocket'],
-    auth: token ? { token } : undefined,
-    reconnectionAttempts: 5,
-    timeout: 20000
-  });
-  return socketInstance;
-}
+// Explicitly connect to the socket server
+socket.connect();
 
-export function getSocket() {
-  return socketInstance;
-}
+// Log socket connection events
+socket.on("connect", () => {
+  console.log("Connected to WebSocket server!");
+});
 
-/**
- * React hook to subscribe to socket events.
- * Usage: const socket = useSocket({ new_message: onNewMessage });
- */
-export function useSocket(handlers = {}, token) {
-  const socketRef = useRef(null);
+socket.on("connect_error", (err) => {
+  console.error("Failed to connect to WebSocket server:", err.message);
+});
 
-  useEffect(() => {
-    socketRef.current = initSocket(token);
+// Ping-pong test to verify communication
+socket.on("pong", () => {
+  console.log("Received pong from server");
+});
 
-    // attach handlers
-    Object.entries(handlers).forEach(([event, fn]) => {
-      if (typeof fn === 'function') socketRef.current.on(event, fn);
-    });
+// Send a ping to the server for the test
+socket.emit("ping");
 
-    return () => {
-      if (!socketRef.current) return;
-      // detach handlers
-      Object.entries(handlers).forEach(([event, fn]) => {
-        if (typeof fn === 'function') socketRef.current.off(event, fn);
-      });
-      // NOTE: do not disconnect global socket here if shared across app
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(Object.keys(handlers)), token]);
-
-  return socketRef.current;
-}
-// ...existing code...
+export default socket;
