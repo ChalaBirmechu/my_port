@@ -33,12 +33,11 @@ const Contact = () => {
     
     try {
       // Send email via backend API
-      const API_BASE = import.meta.env.VITE_API_URL || 'https://chalabirmechngs.vercel.app';
-      const response = await axios.post(
-      'https://server-b6w3.onrender.com/api/contact',
-      formData,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+      const API_BASE = import.meta.env.VITE_API_URL || 'https://server-b6w3.onrender.com';
+      const response = await axios.post(`${API_BASE}/api/contact`, formData, {
+  headers: { 'Content-Type': 'application/json' },
+});
+
       if (response.data.success) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
