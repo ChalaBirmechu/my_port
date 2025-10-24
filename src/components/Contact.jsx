@@ -20,39 +20,6 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // Send email via backend API
-      const API_BASE = import.meta.env.VITE_API_URL || 'https://server-b6w3.onrender.com';
-      const response = await axios.post(`${API_BASE}/api/contact`, formData, {
-  headers: { 'Content-Type': 'application/json' },
-});
-
-      if (response.data.success) {
-        setSubmitStatus('success');
-        setFormData({ name: '', email: '', message: '' });
-      } else {
-        setSubmitStatus('error');
-      }
-    } catch (error) {
-      console.error('Contact form error:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-      setTimeout(() => setSubmitStatus(null), 5000);
-    }
-  };
-
   const contactInfo = [
     {
       icon: FaMapMarkerAlt,
@@ -70,6 +37,73 @@ const Contact = () => {
       details: ['chalabirmechu@gmail.com']
     }
   ];
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const validateForm = () => {
+    if (!formData.name.trim() || formData.name.length < 2) {
+      setSubmitStatus('validation-error');
+      return false;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setSubmitStatus('validation-error');
+      return false;
+    }
+    
+    if (!formData.message.trim() || formData.message.length < 10) {
+      setSubmitStatus('validation-error');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitStatus(null);
+    
+    if (!validateForm()) {
+      setTimeout(() => setSubmitStatus(null), 5000);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || 'https://server-b6w3.onrender.com';
+      const response = await axios.post(`${API_BASE}/api/contact`, formData, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      });
+
+      if (response.data.success) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      
+      if (error.response) {
+        setSubmitStatus('server-error');
+      } else if (error.request) {
+        setSubmitStatus('network-error');
+      } else {
+        setSubmitStatus('error');
+      }
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setSubmitStatus(null), 5000);
+    }
+  };
 
   return (
     <section id="contact" className="contact section">
@@ -127,6 +161,8 @@ const Contact = () => {
                 onChange={handleChange}
                 required
                 placeholder=" "
+                minLength={2}
+                maxLength={50}
               />
               <label htmlFor="name">Your Name</label>
             </div>
@@ -153,8 +189,11 @@ const Contact = () => {
                 onChange={handleChange}
                 required
                 placeholder=" "
+                minLength={10}
+                maxLength={1000}
               />
               <label htmlFor="message">Your Message</label>
+              {/* Character counter removed */}
             </div>
 
             <motion.button 
@@ -173,9 +212,12 @@ const Contact = () => {
                 className={`submit-status ${submitStatus}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
               >
-                {submitStatus === 'success' ? 'Message sent successfully!' : 'Failed to send message. Please try again.'}
+                {submitStatus === 'success' && 'Message sent successfully!'}
+                {submitStatus === 'error' && 'Failed to send message. Please try again.'}
+                {submitStatus === 'server-error' && 'Server error. Please try again later.'}
+                {submitStatus === 'network-error' && 'Network error. Please check your connection.'}
+                {submitStatus === 'validation-error' && 'Please fill all fields correctly.'}
               </motion.div>
             )}
           </motion.form>
