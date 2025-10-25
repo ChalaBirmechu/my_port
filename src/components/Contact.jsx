@@ -77,10 +77,15 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      // FIX: Use the correct backend URL and increase timeout
       const API_BASE = import.meta.env.VITE_API_URL || 'https://server-b6w3.onrender.com';
+      
+      // FIX: Increased timeout from 10000ms to 30000ms and better error handling
       const response = await axios.post(`${API_BASE}/api/contact`, formData, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 10000,
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000, // Increased from 10s to 30s to prevent timeout errors
       });
 
       if (response.data.success) {
@@ -92,11 +97,17 @@ const Contact = () => {
     } catch (error) {
       console.error('Contact form error:', error);
       
-      if (error.response) {
+      // FIX: Better error classification including timeout detection
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        setSubmitStatus('timeout-error');
+      } else if (error.response) {
+        // Server responded with error status (4xx, 5xx)
         setSubmitStatus('server-error');
       } else if (error.request) {
+        // Request was made but no response received
         setSubmitStatus('network-error');
       } else {
+        // Other errors
         setSubmitStatus('error');
       }
     } finally {
@@ -193,7 +204,6 @@ const Contact = () => {
                 maxLength={1000}
               />
               <label htmlFor="message">Your Message</label>
-              {/* Character counter removed */}
             </div>
 
             <motion.button 
@@ -217,6 +227,7 @@ const Contact = () => {
                 {submitStatus === 'error' && 'Failed to send message. Please try again.'}
                 {submitStatus === 'server-error' && 'Server error. Please try again later.'}
                 {submitStatus === 'network-error' && 'Network error. Please check your connection.'}
+                {submitStatus === 'timeout-error' && 'Request timeout. Please try again.'}
                 {submitStatus === 'validation-error' && 'Please fill all fields correctly.'}
               </motion.div>
             )}
