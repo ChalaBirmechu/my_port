@@ -1,32 +1,24 @@
 // pages/api/health.js
 export default function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    return res.status(200).end();
+  }
+
   if (req.method !== 'GET') {
+    res.setHeader('Allow', ['GET']);
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed' 
+      error: `Method ${req.method} Not Allowed` 
     });
   }
 
-  try {
-    const healthStatus = {
-      success: true,
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      service: 'Portfolio Contact API',
-      environment: process.env.NODE_ENV || 'development',
-      version: '1.0.0'
-    };
-
-    console.log('✅ Health check passed');
-    
-    return res.status(200).json(healthStatus);
-  } catch (error) {
-    console.error('❌ Health check failed:', error);
-    return res.status(500).json({
-      success: false,
-      status: 'ERROR',
-      error: 'Health check failed',
-      timestamp: new Date().toISOString()
-    });
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  return res.status(200).json({
+    success: true,
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'Portfolio API'
+  });
 }

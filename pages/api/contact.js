@@ -1,10 +1,19 @@
 // pages/api/contact.js
 export default async function handler(req, res) {
+  // Handle OPTIONS request for CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
   // Only allow POST method
   if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed. Only POST requests are accepted.' 
+      error: `Method ${req.method} Not Allowed` 
     });
   }
 
@@ -41,17 +50,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // Log the submission (in production, you'd save to a database or send email)
-    console.log('📧 Contact form submission received:', { 
+    // Log the submission
+    console.log('📧 Contact form submission:', { 
       name, 
       email, 
       message: message.substring(0, 100) + '...' 
     });
 
-    // Simulate some processing time (like sending email)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate processing
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Success response
+    // Success response with CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).json({
       success: true,
       message: 'Thank you for your message! I will get back to you soon.'
@@ -59,19 +69,10 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ Contact API error:', error);
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(500).json({
       success: false,
-      error: 'Internal server error. Please try again later.'
+      error: 'Internal server error'
     });
   }
 }
-
-// Configure the API route
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-    responseLimit: false,
-  },
-};
