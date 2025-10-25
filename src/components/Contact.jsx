@@ -77,15 +77,12 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // FIX: Use the correct backend URL and increase timeout
-      const API_BASE = import.meta.env.VITE_API_URL || 'https://server-b6w3.onrender.com';
-      
-      // FIX: Increased timeout from 10000ms to 30000ms and better error handling
-      const response = await axios.post(`${API_BASE}/api/contact`, formData, {
+      // FIX: Use only local Vercel API to avoid CORS
+      const response = await axios.post('/api/contact', formData, {
         headers: { 
           'Content-Type': 'application/json',
         },
-        timeout: 30000, // Increased from 10s to 30s to prevent timeout errors
+        timeout: 15000,
       });
 
       if (response.data.success) {
@@ -97,17 +94,17 @@ const Contact = () => {
     } catch (error) {
       console.error('Contact form error:', error);
       
-      // FIX: Better error classification including timeout detection
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         setSubmitStatus('timeout-error');
       } else if (error.response) {
-        // Server responded with error status (4xx, 5xx)
-        setSubmitStatus('server-error');
+        if (error.response.status === 400) {
+          setSubmitStatus('validation-error');
+        } else {
+          setSubmitStatus('server-error');
+        }
       } else if (error.request) {
-        // Request was made but no response received
         setSubmitStatus('network-error');
       } else {
-        // Other errors
         setSubmitStatus('error');
       }
     } finally {
