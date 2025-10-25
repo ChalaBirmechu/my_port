@@ -27,10 +27,19 @@ const Projects = () => {
       image: '/images/houseweb.jpg',
       technologies: ['Telegrambot', 'Bootstrap', 'MongoDB','Chatbot'],
       githubUrl: 'https://frontend-orcin-xi-42.vercel.app/',
-      liveUrl: '#'
+      liveUrl: 'https://frontend-orcin-xi-42.vercel.app/'
+    },
+     {
+      id: 3,
+      title: 'Parsenal Portfolio Website',
+      description: 'I am a passionate software engineer have made my first personal portfolio for my first time.',
+      image: '/images/port.jpg',
+      technologies: ['HTML', 'CSS', 'JavaScript', 'mailto:'],
+      vercel: 'https://chalabirmechu.vercel.app',
+      liveUrl: 'https://chalabirmechu.vercel.app'
     },
     {
-      id: 3,
+      id: 4,
       title: 'Task Management Mobile App',
       description: 'Cross-platform app developed using Flutter and Firebase for real-time task tracking, notifications, and offline data support.',
       image: '/images/mob app.jpg',
@@ -39,7 +48,7 @@ const Projects = () => {
       liveUrl: '#'
     },
     {
-      id: 4,
+      id: 5,
       title: 'Social Networking Website',
       description: 'Built with Django and Bootstrap featuring posts, comments, likes, messaging, and role-based access control.',
       image: '/images/social.jpg',
@@ -48,7 +57,7 @@ const Projects = () => {
       liveUrl: '#'
     },
     {
-      id: 5,
+      id: 6,
       title: 'Inventory Management System',
       description: 'Enterprise-level Java/Spring Boot backend with Angular frontend for managing products, users, and reports.',
       image: '/images/photo.jpg',
