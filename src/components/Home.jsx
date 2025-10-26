@@ -108,7 +108,7 @@ const Home = () => {
           transition={{ duration: 0.8, delay: 0.4 }}
         >
           <motion.img 
-            src="/images/photo_2.jpg" 
+            src="/images/chala.jpg" 
             alt="Chala Birmechu"
             className="hero-img"
             animate={{ 
