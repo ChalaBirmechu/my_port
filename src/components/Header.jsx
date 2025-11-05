@@ -52,13 +52,17 @@ const Header = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="container nav-container">
+        {/* Logo with image */}
         <motion.div 
           className="logo"
           whileHover={{ scale: 1.05 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
+          <img src="/images/cala.jpg" alt="Chala Birmechu Logo" className="logo-img" />
           <span className="logo-text">Chala Birmechu</span>
         </motion.div>
 
+        {/* Navigation Links */}
         <nav className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -81,6 +85,7 @@ const Header = () => {
           })}
         </nav>
 
+        {/* Mobile Hamburger */}
         <motion.button
           className="hamburger"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
