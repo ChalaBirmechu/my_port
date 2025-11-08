@@ -14,9 +14,8 @@ const Home = () => {
   return (
     <section id="home" className="hero">
        {/* 🎥 Background Video */}
-   <video className="hero-bg-video" autoPlay muted loop playsInline preload="auto">
+   <video autoPlay muted loop playsInline className="hero-bg-video">
   <source src="/video/video.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
 </video>
       <div className="hero-overlay"></div>
       <div className="container hero-content">
