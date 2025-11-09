@@ -14,18 +14,8 @@ const Home = () => {
   return (
     <section id="home" className="hero">
        {/* 🎥 Background Video */}
-<video
-  autoPlay
-  muted
-  loop
-  playsInline
-  className="hero-bg-video"
-  preload="metadata" // Changed from 'auto'
-  poster="/video/video-poster.jpg" // Add poster image for faster loading
-  controls={false}
->
+<video autoPlay muted loop playsInline className="hero-bg-video" preload="auto">
   <source src="/video/video.mp4" type="video/mp4" />
-  <source src="/video/video.webm" type="video/webm" /> {/* Add WebM fallback */}
   Your browser does not support the video tag.
 </video>
       <div className="hero-overlay"></div>
