@@ -10,14 +10,24 @@
 }
 /* 🎥 Background Video */
 .hero-bg-video {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 0;
-  opacity: 0.85; /* adjust transparency */
+  z-index: -1;
+  background-color: #000; /* Fallback background */
+}
+
+/* Add loading state */
+.hero-bg-video[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-bg-video:loaded {
+  opacity: 1;
 }
 
 .hero::before {
