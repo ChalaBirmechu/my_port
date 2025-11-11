@@ -23,7 +23,6 @@ const Home = () => {
   preload="auto"
 >
   <source src="/video/video.mp4" type="video/mp4" />
-  Your browser does not support the video tag.
 </video>
       <div className="hero-overlay"></div>
       <div className="container hero-content">
