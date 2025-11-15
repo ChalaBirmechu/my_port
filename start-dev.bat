@@ -8,7 +8,7 @@ start "Backend Server" cmd /k "cd server && npm run dev"
 timeout /t 3 /nobreak > nul
 
 echo Starting Frontend Server (Port 3000)...
-start "Frontend Server" cmd /k "cd my_port && npm run dev"
+start "Frontend Server" cmd /k "cd client && npm run dev"
 
 echo.
 echo Both servers are starting...

@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
-    "client": "cd my_port && npm run dev",
-    "install-all": "npm install && cd server && npm install && cd ../my_port && npm install",
-    "build": "cd my_port && npm run build",
+    "client": "cd client && npm run dev",
+    "install-all": "npm install && cd server && npm install && cd ../clien && npm install",
+    "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
   "keywords": ["portfolio", "react", "nodejs", "express", "mongodb"],

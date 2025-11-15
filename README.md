@@ -57,7 +57,7 @@ cd my_port
 
 ### 2. Install Frontend Dependencies
 ```bash
-cd my_port
+cd client
 npm install
 ```
 

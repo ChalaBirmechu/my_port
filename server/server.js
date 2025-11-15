@@ -1,3 +1,4 @@
+// --- Existing & Required Dependencies ---
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,81 +11,123 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
+// --- Trust proxy for Render ---
+app.set('trust proxy', 1);
+
+// --- Basic request logger ---
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// --- Security middleware ---
 app.use(helmet());
 
-// Rate limiting
+// --- Rate limiter ---
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// --- CORS configuration ---
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // e.g. https://chalabirmechngs.vercel.app
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean);
 
-// Body parsing middleware
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS not allowed for this origin'));
+    },
+    credentials: true,
+  })
+);
+
+// --- Body parsing middleware ---
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+// --- MongoDB connection ---
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.warn('⚠️ MONGODB_URI not set. Please configure it in your .env file.');
+}
 
-// Contact message schema
+mongoose
+  .connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  // Remove deprecated options - they're no longer needed in newer versions
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => console.log('❌ MongoDB connection error:', err));
+
+// --- Contact Message Schema ---
 const contactSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, lowercase: true },
   message: { type: String, required: true, trim: true },
   createdAt: { type: Date, default: Date.now },
-  isRead: { type: Boolean, default: false }
+  isRead: { type: Boolean, default: false },
 });
-
 const Contact = mongoose.model('Contact', contactSchema);
 
-// Email transporter configuration
-const createTransporter = () => {
+// --- Email Transporter ---
+const createTransporter = async () => {
+  // ... (existing dev environment setup)
+
   if (process.env.NODE_ENV === 'production') {
-    return nodemailer.createTransporter({
-      service: 'gmail',
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠️ EMAIL_USER or EMAIL_PASS not set for production mailer. Email sending will likely fail.');
+    }
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com', // Explicit host
+      port: 465,              // Explicit port for SSL
+      secure: true,           // Use SSL/TLS
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
+      // You can add a specific timeout here if you suspect network delays,
+      // though ETIMEDOUT usually means it's failing before the default.
+      // connectionTimeout: 15000, // 15 seconds
+      // socketTimeout: 15000,   // 15 seconds
     });
   } else {
-    // For development, use a test account
-    return nodemailer.createTransporter({
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
+      secure: false,
       auth: {
-        user: 'ethereal.user@ethereal.email',
-        pass: 'ethereal.pass'
-      }
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
     });
   }
 };
 
-// Routes
+// --- Routes --- //
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'Portfolio server is running',
-    timestamp: new Date().toISOString()
+    backend: 'Render',
+    frontend: process.env.FRONTEND_URL,
+    timestamp: new Date().toISOString(),
   });
 });
 
-// Get portfolio data
+// Portfolio data
 app.get('/api/portfolio', async (req, res) => {
   try {
     const portfolioData = {
@@ -98,63 +141,15 @@ app.get('/api/portfolio', async (req, res) => {
         experience: '2+',
         projects: '5+',
         clients: '3+',
-        satisfaction: '100%'
+        satisfaction: '100%',
       },
       skills: {
         frontend: ['React', 'Vue', 'HTML5', 'CSS3', 'JavaScript', 'TailwindCSS'],
         backend: ['Node.js', 'Express', 'Django', 'Spring Boot', 'Flask'],
         mobile: ['Flutter', 'React Native', 'Android', 'iOS'],
-        devops: ['Git', 'Docker', 'AWS', 'Heroku', 'CI/CD']
+        devops: ['Git', 'Docker', 'AWS', 'Heroku', 'CI/CD'],
       },
-      projects: [
-        {
-          id: 1,
-          title: 'E-Commerce Web Platform',
-          description: 'A full-stack e-commerce site built with React, Node.js, Express, and MongoDB. Features include cart management, user authentication, and payment gateway integration.',
-          image: '/images/ecom.jpg',
-          technologies: ['React', 'Node.js', 'MongoDB', 'Express'],
-          githubUrl: 'https://github.com/ChalaBirmechu/Sabaf_Software_Website/',
-          liveUrl: '#'
-        },
-        {
-          id: 2,
-          title: 'Task Management Mobile App',
-          description: 'Cross-platform app developed using Flutter and Firebase for real-time task tracking, notifications, and offline data support.',
-          image: '/images/mob app.jpg',
-          technologies: ['Flutter', 'Firebase', 'Dart'],
-          githubUrl: 'https://github.com/ChalaBirmechu',
-          liveUrl: '#'
-        },
-        {
-          id: 3,
-          title: 'Social Networking Website',
-          description: 'Built with Django and Bootstrap featuring posts, comments, likes, messaging, and role-based access control.',
-          image: '/images/social.jpg',
-          technologies: ['Django', 'Bootstrap', 'Python', 'SQLite'],
-          githubUrl: 'https://chalabirmechu.github.io/chala_port/',
-          liveUrl: '#'
-        },
-        {
-          id: 4,
-          title: 'Inventory Management System',
-          description: 'Enterprise-level Java/Spring Boot backend with Angular frontend for managing products, users, and reports.',
-          image: '/images/photo.jpg',
-          technologies: ['Java', 'Spring Boot', 'Angular', 'MySQL'],
-          githubUrl: 'https://chalabirmechu.github.io/chala_port/',
-          liveUrl: '#'
-        }
-      ],
-      experience: [
-        {
-          company: 'Oict Solutions',
-          position: 'Intern',
-          duration: 'One Semester',
-          description: 'Completed a one-semester internship at Oict Solutions, where I worked on web development and mobile application development projects. This experience allowed me to apply my skills in real-world scenarios, collaborate with a professional team, and contribute to innovative solutions.',
-          skills: ['Web Development', 'Mobile Application Development', 'Team Collaboration', 'Problem Solving']
-        }
-      ]
     };
-
     res.json(portfolioData);
   } catch (error) {
     console.error('Error fetching portfolio data:', error);
@@ -163,93 +158,82 @@ app.get('/api/portfolio', async (req, res) => {
 });
 
 // Contact form submission
-app.post('/api/contact', [
-  body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name must be between 2 and 50 characters'),
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('message').trim().isLength({ min: 10, max: 1000 }).withMessage('Message must be between 10 and 1000 characters')
-], async (req, res) => {
-  try {
-    // Validate input
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        error: 'Validation failed', 
-        details: errors.array() 
+app.post(
+  '/api/contact',
+  [
+    body('name')
+      .trim()
+      .isLength({ min: 2, max: 50 })
+      .withMessage('Name must be between 2 and 50 characters'),
+    body('email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Please provide a valid email'),
+    body('message')
+      .trim()
+      .isLength({ min: 10, max: 1000 })
+      .withMessage('Message must be between 10 and 1000 characters'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array(),
+        });
+      }
+
+      const { name, email, message } = req.body;
+      const contactMessage = new Contact({ name, email, message });
+      await contactMessage.save();
+
+      const transporter = await createTransporter();
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER || 'noreply@portfolio.com',
+        to: 'chalabirmechu@gmail.com',
+        subject: `New Contact Form Submission from ${name}`,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <hr>
+          <p><em>Sent from portfolio contact form</em></p>
+        `,
+      };
+
+      const autoReply = {
+        from: process.env.EMAIL_USER || 'noreply@portfolio.com',
+        to: email,
+        subject: 'Thank you for contacting Chala Birmechu',
+        html: `
+          <h2>Thank you for your message!</h2>
+          <p>Hi ${name},</p>
+          <p>Thank you for reaching out! I've received your message and will get back to you as soon as possible.</p>
+          <p>Best regards,<br>Chala Birmechu</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      await transporter.sendMail(autoReply);
+
+      res.json({ success: true, message: 'Message sent successfully!' });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      res.status(500).json({
+        error: 'Failed to send message. Please try again later.',
       });
     }
-
-    const { name, email, message } = req.body;
-
-    // Save to database
-    const contactMessage = new Contact({
-      name,
-      email,
-      message
-    });
-
-    await contactMessage.save();
-
-    // Send email notification
-    const transporter = createTransporter();
-    
-    const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@portfolio.com',
-      to: 'chalabirmechu@gmail.com',
-      subject: `New Contact Form Submission from ${name}`,
-      html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-        <hr>
-        <p><em>Sent from portfolio contact form</em></p>
-      `
-    };
-
-    // Send auto-reply to user
-    const autoReplyOptions = {
-      from: process.env.EMAIL_USER || 'noreply@portfolio.com',
-      to: email,
-      subject: 'Thank you for contacting Chala Birmechu',
-      html: `
-        <h2>Thank you for your message!</h2>
-        <p>Hi ${name},</p>
-        <p>Thank you for reaching out! I've received your message and will get back to you as soon as possible.</p>
-        <p>Best regards,<br>Chala Birmechu</p>
-        <hr>
-        <p><em>This is an automated response. Please do not reply to this email.</em></p>
-      `
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-      await transporter.sendMail(autoReplyOptions);
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      // Don't fail the request if email fails
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'Message sent successfully!' 
-    });
-
-  } catch (error) {
-    console.error('Contact form error:', error);
-    res.status(500).json({ 
-      error: 'Failed to send message. Please try again later.' 
-    });
   }
-});
+);
 
-// Get contact messages (admin endpoint)
+// Admin: get messages
 app.get('/api/admin/messages', async (req, res) => {
   try {
-    const messages = await Contact.find()
-      .sort({ createdAt: -1 })
-      .limit(50);
-    
+    const messages = await Contact.find().sort({ createdAt: -1 }).limit(50);
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -257,7 +241,7 @@ app.get('/api/admin/messages', async (req, res) => {
   }
 });
 
-// Mark message as read
+// Mark as read
 app.patch('/api/admin/messages/:id/read', async (req, res) => {
   try {
     const message = await Contact.findByIdAndUpdate(
@@ -265,11 +249,7 @@ app.patch('/api/admin/messages/:id/read', async (req, res) => {
       { isRead: true },
       { new: true }
     );
-
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-
+    if (!message) return res.status(404).json({ error: 'Message not found' });
     res.json({ success: true, message: 'Message marked as read' });
   } catch (error) {
     console.error('Error updating message:', error);
@@ -277,26 +257,35 @@ app.patch('/api/admin/messages/:id/read', async (req, res) => {
   }
 });
 
-// Error handling middleware
+// --- Root route ---
+app.get('/', (req, res) => {
+  res.send('🌍 Portfolio Backend API is Running. Use /api endpoints.');
+});
+
+// --- Error handler ---
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
+  console.error('Unhandled error:', err.stack);
+  res.status(500).json({
     error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    message:
+      process.env.NODE_ENV === 'development'
+        ? err.message
+        : 'Internal server error',
   });
 });
 
-// 404 handler
+// --- 404 fallback ---
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Route not found',
-    message: 'The requested endpoint does not exist'
+    message: 'The requested endpoint does not exist',
   });
 });
 
-// Start server
+// --- Start server ---
 app.listen(PORT, () => {
-  console.log(`Portfolio server running on port ${PORT}`);
+  console.log(`🚀 Portfolio server running on port ${PORT}`);
+  console.log(`🌐 Frontend: ${process.env.FRONTEND_URL}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
