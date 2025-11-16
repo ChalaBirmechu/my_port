@@ -4,7 +4,7 @@
   align-items: center;
   position: relative;
   /* Fallback gradient background if video fails to load */
-  background: linear-gradient(135deg, #4864e4 0%, #180670 50%, #7d022f 100%);
+  background: linear-gradient(135deg, #4864e4 0%, #180670 50%, #21048c 100%);
   padding: 8rem 0 6rem 0;
   overflow: hidden;
   margin-top: 0;
